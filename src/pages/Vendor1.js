@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 function Vendors() {
+    const apiUrl = process.env.REACT_APP_API_URL; // ✅ This works
+
     const [vendors, setVendors] = useState([]);
 
     const [form, setForm] = useState({
@@ -30,7 +32,7 @@ function Vendors() {
 
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(REACT_APP_API_URL, { vendorId }, {
+            await axios.delete(apiUrl, { vendorId }, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
