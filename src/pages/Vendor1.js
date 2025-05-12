@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api/api';
 import { useNavigate } from 'react-router-dom';
-
+import axios from 'axios';
 
 function Vendors() {
     const [vendors, setVendors] = useState([]);
