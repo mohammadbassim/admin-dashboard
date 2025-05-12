@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import Vendors from './Vendors';
+import Vendors from './Vendor1';
 import Categories from './Categories';
 import Users from './Users';
 import VendorDetails from './VendorDetails';

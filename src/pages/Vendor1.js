@@ -24,6 +24,25 @@ function Vendors() {
 
     }, []);
 
+    const handleDeleteVendor = async (vendorId) => {
+        const confirm = window.confirm('هل أنت متأكد من حذف هذا المتجر؟');
+        if (!confirm) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            await axios.delete(`https://localhost:7094/api/vendor/${vendorId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            alert('تم حذف المتجر بنجاح');
+            // Optional: Refresh vendor list
+            setVendors((prev) => prev.filter((v) => v.id !== vendorId));
+        } catch (err) {
+            console.error(err);
+            alert('فشل حذف المتجر');
+        }
+    };
 
     const fetchVendors = async () => {
         try {
@@ -95,16 +114,6 @@ function Vendors() {
         setSelectedId(v.id);
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm('هل أنت متأكد من حذف البائع؟')) {
-            try {
-                await api.delete(`/VendorCategory/${id}`);
-                fetchVendors();
-            } catch {
-                alert('فشل في الحذف');
-            }
-        }
-    };
 
     return (
         <div>

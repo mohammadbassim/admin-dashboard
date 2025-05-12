@@ -58,7 +58,16 @@ function VendorDetails() {
         });
         setEditId(product.id);
     };
-
+    const handleDeleteVendor = async (id) => {
+        if (window.confirm('هل أنت متأكد من حذف البائع؟')) {
+            try {
+                await api.delete(`/VendorCategory/${id}`);
+                fetchVendor();
+            } catch {
+                alert('فشل في الحذف');
+            }
+        }
+    };
     const handleDelete = async (productId) => {
         if (window.confirm('هل تريد حذف هذا المنتج؟')) {
             await api.delete(`/vendors/${id}/products/${productId}`);
@@ -87,6 +96,13 @@ function VendorDetails() {
             <button className="btn btn-outline-secondary mb-3" onClick={() => navigate('/dashboard/vendors')}>
                 ← الرجوع لقائمة البائعين
             </button>
+            <button
+                className="btn btn-danger btn-sm"
+                onClick={() => handleDeleteVendor(vendor.id)}
+            >
+                🗑️ حذف
+            </button>
+
 
             {vendor && (
                 <div className="mb-4">
