@@ -15,6 +15,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard/*" element={token ? <Dashboard /> : <Navigate to="/login" />} />
         <Route path="/categories" element={<Categories />} />
+        <Route path="/" element={<Login />} />
       </Routes>
     </Router>
   );
