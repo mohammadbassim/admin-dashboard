@@ -1,21 +1,35 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/api';
+import axios from 'axios'; // ✅ You forgot to import axios
+import api from '../api/api'; // optional, if you use your api wrapper
 
 function Login() {
+
+
     const [form, setForm] = useState({ username: '', password: '' });
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const res = await api.post('/Auth/login', form);
-            localStorage.setItem('token', res.data.token);
-            navigate('/dashboard');
+            const res = await axios.post('https://localhost:7094/api/Auth/login', {
+                username: form.username,
+                password: form.password,
+            });
+
+            const token = res.data?.token;
+            if (token) {
+                localStorage.setItem('token', token);
+                navigate('/dashboard/vendors');
+            } else {
+                alert('Login successful but no token received');
+            }
         } catch (err) {
-            alert('Login failed.');
+            alert('فشل تسجيل الدخول');
+            console.error(err);
         }
     };
+
 
     return (
         <div className="d-flex align-items-center justify-content-center vh-100 bg-light">
@@ -23,9 +37,10 @@ function Login() {
                 <h4 className="text-center text-primary mb-4">تسجيل دخول المدير</h4>
                 <form onSubmit={handleLogin}>
                     <div className="mb-3">
-                        <label className="form-label">اسم المستخدم</label>
+                        <label className="form-label">البريد الإلكتروني</label>
                         <input
                             className="form-control"
+                            type="username"
                             placeholder="اسم المستخدم"
                             value={form.username}
                             onChange={(e) => setForm({ ...form, username: e.target.value })}

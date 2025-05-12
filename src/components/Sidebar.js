@@ -1,7 +1,15 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 function Sidebar() {
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        localStorage.removeItem('token'); // ✅ Remove token
+        navigate('/login');               // ✅ Redirect to login
+    };
+
     return (
 
         <div className="bg-white border-end p-3" style={{ minHeight: '100vh', width: '240px' }}>
@@ -29,12 +37,10 @@ function Sidebar() {
                         +      </NavLink>
                     +    </li>
                 <li className="nav-item mt-3">
-                    <button className="btn btn-outline-danger w-100" onClick={() => {
-                        localStorage.removeItem('token');
-                        window.location.href = '/login';
-                    }}>
-                        🚪 تسجيل الخروج
+                    <button className="btn btn-outline-danger" onClick={handleLogout}>
+                        تسجيل الخروج
                     </button>
+
                 </li>
             </ul>
         </div>
