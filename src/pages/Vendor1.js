@@ -30,7 +30,7 @@ function Vendors() {
 
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(`gnosis-001-site2.jtempurl.com${vendorId}`, {
+            await axios.delete(REACT_APP_API_URL, { vendorId }, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

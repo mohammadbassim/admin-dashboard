@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'gnosis-001-site2.jtempurl.com',
+    baseURL: 'REACT_APP_API_URL',
 });
 
 api.interceptors.request.use((config) => {

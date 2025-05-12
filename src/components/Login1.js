@@ -12,7 +12,7 @@ function Login() {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post('gnosis-001-site2.jtempurl.com', {
+            const res = await axios.post(REACT_APP_API_URL, {
                 username: form.username,
                 password: form.password,
             });
