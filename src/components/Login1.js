@@ -5,14 +5,14 @@ import api from '../api/api'; // optional, if you use your api wrapper
 
 function Login() {
 
-
+    const apiUrl = process.env.REACT_APP_API_URL;
     const [form, setForm] = useState({ username: '', password: '' });
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post(REACT_APP_API_URL, {
+            const res = await axios.post(apiUrl, {
                 username: form.username,
                 password: form.password,
             });
