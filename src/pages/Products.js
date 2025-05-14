@@ -108,7 +108,7 @@ function Products() {
                     <table className="table table-bordered">
                         <thead>
                             <tr>
-                                <th>الاسم</th>
+                                <th>السم</th>
                                 <th>السعر (ل.س)</th>
                                 <th>الصورة</th>
                                 <th>الخيارات</th>

@@ -12,7 +12,7 @@ function Login() {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post(apiUrl, {
+            const res = await axios.post('https://localhost:7094/api/Auth/login', {
                 username: form.username,
                 password: form.password,
             });

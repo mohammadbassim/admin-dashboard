@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 function Vendors() {
-    const apiUrl = process.env.REACT_APP_API_URL; // ✅ This works
+
 
     const [vendors, setVendors] = useState([]);
 
@@ -26,25 +26,28 @@ function Vendors() {
 
     }, []);
 
+
     const handleDeleteVendor = async (vendorId) => {
-        const confirm = window.confirm('هل أنت متأكد من حذف هذا المتجر؟');
-        if (!confirm) return;
+        const confirmDelete = window.confirm('هل أنت متأكد من حذف هذا المتجر؟');
+        if (!confirmDelete) return;
 
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(apiUrl, { vendorId }, {
+            await api.delete(`/Vendor/${vendorId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
+
             alert('تم حذف المتجر بنجاح');
-            // Optional: Refresh vendor list
             setVendors((prev) => prev.filter((v) => v.id !== vendorId));
         } catch (err) {
             console.error(err);
             alert('فشل حذف المتجر');
         }
     };
+
+
 
     const fetchVendors = async () => {
         try {
@@ -230,6 +233,13 @@ function Vendors() {
                                                     onClick={() => navigate(`/dashboard/vendors/${v.id}`)}
                                                 >
                                                     عرض التفاصيل
+                                                </button>
+
+                                                <button
+                                                    className="btn btn-outline-primary"
+                                                    onClick={() => handleDeleteVendor(v.id)}
+                                                >
+                                                    حذف
                                                 </button>
                                             </div>
                                         </div>

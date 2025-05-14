@@ -58,20 +58,34 @@ function VendorDetails() {
         });
         setEditId(product.id);
     };
-    const handleDeleteVendor = async (id) => {
+
+    const handleDeleteVendor = async () => {
         if (window.confirm('هل أنت متأكد من حذف البائع؟')) {
             try {
-                await api.delete(`/VendorCategory/${id}`);
-                fetchVendor();
-            } catch {
-                alert('فشل في الحذف');
+                const token = localStorage.getItem('token');
+                await api.delete(`/Vendor/${id}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                alert('تم حذف البائع بنجاح');
+                navigate('/dashboard/vendors');
+            } catch (err) {
+                console.error(err);
+                alert('فشل في حذف البائع');
             }
         }
     };
-    const handleDelete = async (productId) => {
+
+    const handleDeleteProduct = async (productId) => {
         if (window.confirm('هل تريد حذف هذا المنتج؟')) {
-            await api.delete(`/vendors/${id}/products/${productId}`);
-            fetchProducts();
+            try {
+                await api.delete(`/vendors/${id}/products/${productId}`);
+                fetchProducts();
+            } catch {
+                alert('فشل في حذف المنتج');
+            }
         }
     };
 
@@ -82,7 +96,7 @@ function VendorDetails() {
             return;
         }
         try {
-            await api.put(`/Vendor/${id}/update-product-prices`, { percentage });
+            await api.put(`Vendor/${id}/update-product-prices`, { percentage });
             alert('تم تحديث الأسعار بنجاح');
             fetchProducts();
         } catch (err) {
@@ -96,13 +110,9 @@ function VendorDetails() {
             <button className="btn btn-outline-secondary mb-3" onClick={() => navigate('/dashboard/vendors')}>
                 ← الرجوع لقائمة البائعين
             </button>
-            <button
-                className="btn btn-danger btn-sm"
-                onClick={() => handleDeleteVendor(vendor.id)}
-            >
+            <button className="btn btn-danger btn-sm" onClick={handleDeleteVendor}>
                 🗑️ حذف
             </button>
-
 
             {vendor && (
                 <div className="mb-4">
@@ -121,7 +131,6 @@ function VendorDetails() {
                         <button className="btn btn-warning" onClick={handleMassPriceUpdate}>
                             تحديث الأسعار
                         </button>
-
                     </div>
                 </div>
             )}
@@ -216,7 +225,7 @@ function VendorDetails() {
                                     </button>
                                     <button
                                         className="btn btn-sm btn-danger"
-                                        onClick={() => handleDelete(p.id)}
+                                        onClick={() => handleDeleteProduct(p.id)}
                                     >
                                         حذف
                                     </button>
@@ -225,7 +234,6 @@ function VendorDetails() {
                         ))
                     )}
                 </tbody>
-
             </table>
         </div>
     );
