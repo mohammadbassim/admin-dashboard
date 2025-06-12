@@ -24,7 +24,7 @@ function Products() {
 
     const fetchProducts = async (vendorId) => {
         try {
-            const res = await api.get(`/vendors/${vendorId}/products`);
+            const res = await api.get(`/Vendor/${vendorId}/products`);
             setProducts(res.data || []);
         } catch {
             alert('فشل تحميل المنتجات');
@@ -42,9 +42,9 @@ function Products() {
         try {
             const productData = { ...form, priceInSYP: parseFloat(form.priceInSYP) };
             if (editId) {
-                await api.put(`/vendors/${selectedVendor}/products/${editId}`, productData);
+                await api.put(`/Vendor/${selectedVendor}/products/${editId}`, productData);
             } else {
-                await api.post(`/vendors/${selectedVendor}/products`, productData);
+                await api.post(`/Vendor/${selectedVendor}/products`, productData);
             }
             setForm({ name: '', priceInSYP: '', imageUrl: '' });
             setEditId(null);
@@ -62,11 +62,28 @@ function Products() {
     const handleDelete = async (id) => {
         if (window.confirm('هل تريد حذف المنتج؟')) {
             try {
-                await api.delete(`/vendors/${selectedVendor}/products/${id}`);
+                await api.delete(`/Vendor/${selectedVendor}/products/${id}`);
                 fetchProducts(selectedVendor);
             } catch {
                 alert('فشل في الحذف');
             }
+        }
+    };
+
+    // Add image upload handler
+    const handleProductImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('image', file);
+        try {
+            const res = await api.post('/upload', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            setForm({ ...form, imageUrl: res.data.imageUrl });
+        } catch (err) {
+            alert('فشل في رفع صورة المنتج');
+            console.error(err);
         }
     };
 
@@ -100,6 +117,7 @@ function Products() {
                             <div className="col-md-4">
                                 <input className="form-control mb-2" placeholder="رابط الصورة"
                                     value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} />
+                                <input className="form-control mb-2" type="file" accept="image/*" onChange={handleProductImageUpload} />
                             </div>
                         </div>
                         <button className="btn btn-primary">{editId ? 'تعديل' : 'إضافة'}</button>

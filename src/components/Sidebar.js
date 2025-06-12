@@ -32,10 +32,25 @@ function Sidebar() {
                     </NavLink>
                 </li>
                 <li className="nav-item mb-2">
-                    +      <NavLink to="/dashboard/pending-admins" className="nav-link text-dark">
+                    <NavLink to="/dashboard/pending-admins" className="nav-link text-dark">
                         +        👤 المسؤولون المعلقون
-                        +      </NavLink>
-                    +    </li>
+                    </NavLink>
+                </li>
+                <li className="nav-item mb-2">
+                    <NavLink to="/dashboard/active-orders" className="nav-link text-dark">
+                        🚚 الطلبات النشطة
+                    </NavLink>
+                </li>
+                <li className="nav-item mb-2">
+                    <NavLink to="/dashboard/register-driver" className="nav-link text-dark">
+                        🚗 تسجيل سائق
+                    </NavLink>
+                </li>
+                <li className="nav-item mb-2">
+                    <NavLink to="/dashboard/drivers-list" className="nav-link text-dark">
+                        📝 قائمة السائقين
+                    </NavLink>
+                </li>
                 <li className="nav-item mt-3">
                     <button className="btn btn-outline-danger" onClick={handleLogout}>
                         تسجيل الخروج

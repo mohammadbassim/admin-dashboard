@@ -10,6 +10,8 @@ function Vendors() {
 
     const [form, setForm] = useState({
         name: '',
+        phoneNumber: '',
+        password: '',
         location: '',
         dollarExchangeRate: '',
         imageUrl: '',
@@ -71,35 +73,30 @@ function Vendors() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         try {
-
-
             const data = {
                 name: form.name,
+                phoneNumber: form.phoneNumber,
+                password: form.password,
                 location: form.location,
                 dollarExchangeRate: parseFloat(form.dollarExchangeRate),
                 imageUrl: form.imageUrl,
                 vendorCategoryId: parseInt(form.vendorCategoryId)
-
-
             };
             if (!data.vendorCategoryId || isNaN(data.vendorCategoryId)) {
                 alert('يرجى اختيار فئة البائع');
                 return;
             }
-            console.log('Form state:', form);
-            console.log('Categories:', categories);
-
-
-
+            if (!data.phoneNumber || !data.password) {
+                alert('يرجى إدخال رقم الجوال وكلمة المرور');
+                return;
+            }
             if (selectedId) {
                 await api.put(`/Vendor/${selectedId}`, data);
             } else {
-                await api.post('/Vendor', data);
+                await api.post('/Vendor/register', data);
             }
-
-            setForm({ name: '', location: '', dollarExchangeRate: '', imageUrl: '', vendorCategoryId: '' });
+            setForm({ name: '', phoneNumber: '', password: '', location: '', dollarExchangeRate: '', imageUrl: '', vendorCategoryId: '' });
             setSelectedId(null);
             fetchVendors();
         } catch (error) {
@@ -138,6 +135,28 @@ function Vendors() {
                     </div>
 
                     <div className="col-md-4">
+                        <label>رقم الجوال</label>
+                        <input
+                            className="form-control mb-2"
+                            placeholder="مثال: 09xxxxxxxxx"
+                            value={form.phoneNumber}
+                            onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })}
+                            required
+                        />
+                    </div>
+                    <div className="col-md-4">
+                        <label>كلمة المرور</label>
+                        <input
+                            type="password"
+                            className="form-control mb-2"
+                            placeholder="كلمة مرور البائع"
+                            value={form.password}
+                            onChange={(e) => setForm({ ...form, password: e.target.value })}
+                            required
+                        />
+                    </div>
+
+                    <div className="col-md-4">
                         <label>الموقع</label>
                         <input
                             className="form-control mb-2"
@@ -161,16 +180,34 @@ function Vendors() {
                     </div>
 
                     <div className="col-md-8">
-                        <label>رابط الصورة</label>
-                        <input
-                            className="form-control mb-2"
-                            placeholder="رابط مباشر لصورة البائع"
-                            value={form.imageUrl}
-                            onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                        />
-                    </div>
-
-                    <div className="col-md-4 text-center">
+                        <label>صورة البائع</label>
+                        <form onSubmit={async (e) => {
+                            e.preventDefault();
+                            const fileInput = document.getElementById('vendor-image-upload');
+                            if (fileInput && fileInput.files.length > 0) {
+                                const file = fileInput.files[0];
+                                const formData = new FormData();
+                                formData.append('image', file);
+                                try {
+                                    const res = await api.post('/upload', formData, {
+                                        headers: { 'Content-Type': 'multipart/form-data' }
+                                    });
+                                    setForm({ ...form, imageUrl: res.data.imageUrl });
+                                } catch (err) {
+                                    alert('فشل في رفع صورة البائع');
+                                }
+                            } else {
+                                alert('يرجى اختيار صورة قبل الرفع');
+                            }
+                        }} encType="multipart/form-data" style={{ display: 'flex', flexDirection: 'column' }}>
+                            <input
+                                id="vendor-image-upload"
+                                type="file"
+                                accept="image/*"
+                                className="form-control mb-2"
+                            />
+                            <button type="submit" className="btn btn-primary mb-2">رفع الصورة</button>
+                        </form>
                         {form.imageUrl && (
                             <img
                                 src={form.imageUrl}
@@ -211,43 +248,44 @@ function Vendors() {
 
 
             <table className="table table-bordered table-striped">
-
+                <thead>
+                    <tr>
+                        <th>اسم البائع</th>
+                        <th>الموقع</th>
+                        <th>الفئة</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
                 <tbody>
-                    <div>
-                        <h4 className="mb-3">قائمة البائعين</h4>
-                        {vendors.length === 0 ? (
-                            <div className="alert alert-warning">لا يوجد بائعين لعرضهم.</div>
-                        ) : (
-                            <div className="row">
-                                {vendors.map((v) => (
-                                    <div key={v.id} className="col-md-4">
-                                        <div className="card mb-3 shadow-sm">
-                                            <div className="card-body">
-                                                <h5 className="card-title">{v.name}</h5>
-                                                <p className="card-text">الموقع: {v.location}</p>
-                                                <p className="card-text">
-                                                    الفئة: {v.vendorCategory?.name || 'غير محددة'}
-                                                </p>
-                                                <button
-                                                    className="btn btn-outline-primary"
-                                                    onClick={() => navigate(`/dashboard/vendors/${v.id}`)}
-                                                >
-                                                    عرض التفاصيل
-                                                </button>
-
-                                                <button
-                                                    className="btn btn-outline-primary"
-                                                    onClick={() => handleDeleteVendor(v.id)}
-                                                >
-                                                    حذف
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                    {vendors.length === 0 ? (
+                        <tr>
+                            <td colSpan="4" className="text-center">
+                                <div className="alert alert-warning mb-0">لا يوجد بائعين لعرضهم.</div>
+                            </td>
+                        </tr>
+                    ) : (
+                        vendors.map((v) => (
+                            <tr key={v.id}>
+                                <td>{v.name}</td>
+                                <td>{v.location}</td>
+                                <td>{v.vendorCategory?.name || 'غير محددة'}</td>
+                                <td>
+                                    <button
+                                        className="btn btn-outline-primary btn-sm me-2"
+                                        onClick={() => navigate(`/dashboard/vendors/${v.id}`)}
+                                    >
+                                        عرض التفاصيل
+                                    </button>
+                                    <button
+                                        className="btn btn-outline-danger btn-sm"
+                                        onClick={() => handleDeleteVendor(v.id)}
+                                    >
+                                        حذف
+                                    </button>
+                                </td>
+                            </tr>
+                        ))
+                    )}
                 </tbody>
             </table>
         </div>

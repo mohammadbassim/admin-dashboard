@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios'; // ✅ You forgot to import axios
 import api from '../api/api'; // optional, if you use your api wrapper
 
 function Login() {
 
-    const apiUrl = process.env.REACT_APP_API_URL;
     const [form, setForm] = useState({ username: '', password: '' });
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post('https://gnosis-001-site2.jtempurl.com/api/Auth/login', {
+            // Use the shared api instance for correct baseURL and cleaner code
+            const res = await api.post('/Auth/login', {
                 username: form.username,
                 password: form.password,
             });

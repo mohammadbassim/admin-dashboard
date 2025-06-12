@@ -6,6 +6,9 @@ import Categories from './Categories';
 import Users from './Users';
 import VendorDetails from './VendorDetails';
 import PendingAdmins from './PendingAdmins';
+import ActiveOrders from './ActiveOrders';
+import RegisterDriver from './RegisterDriver';
+import DriversList from './DriversList';
 
 function Dashboard() {
     return (
@@ -18,6 +21,9 @@ function Dashboard() {
                     <Route path="categories" element={<Categories />} />
                     <Route path="users" element={<Users />} />
                     <Route path="pending-admins" element={<PendingAdmins />} />
+                    <Route path="active-orders" element={<ActiveOrders />} />
+                    <Route path="register-driver" element={<RegisterDriver />} />
+                    <Route path="drivers-list" element={<DriversList />} />
                 </Routes>
             </div>
         </div>

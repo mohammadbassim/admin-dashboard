@@ -6,6 +6,7 @@ function VendorDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [vendor, setVendor] = useState(null);
+    const [vendorImage, setVendorImage] = useState(''); // used in JSX, keep as is
     const [products, setProducts] = useState([]);
     const [form, setForm] = useState({ name: '', priceInSYP: '', costPrice: '', imageUrl: '' });
     const [editId, setEditId] = useState(null);
@@ -14,15 +15,17 @@ function VendorDetails() {
     useEffect(() => {
         fetchVendor();
         fetchProducts();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const fetchVendor = async () => {
         const res = await api.get(`/Vendor/${id}`);
         setVendor(res.data);
+        setVendorImage(res.data.imageUrl || '');
     };
 
     const fetchProducts = async () => {
-        const res = await api.get(`/vendors/${id}/products`);
+        const res = await api.get(`/Vendor/${id}/products`);
         setProducts(res.data || []);
     };
 
@@ -37,9 +40,9 @@ function VendorDetails() {
 
         try {
             if (editId) {
-                await api.put(`/vendors/${id}/products/${editId}`, payload);
+                await api.put(`/Vendor/${id}/products/${editId}`, payload);
             } else {
-                await api.post(`/vendors/${id}/products`, payload);
+                await api.post(`/Vendor/${id}/products`, payload);
             }
             setForm({ name: '', priceInSYP: '', costPrice: '', imageUrl: '' });
             setEditId(null);
@@ -81,7 +84,7 @@ function VendorDetails() {
     const handleDeleteProduct = async (productId) => {
         if (window.confirm('هل تريد حذف هذا المنتج؟')) {
             try {
-                await api.delete(`/vendors/${id}/products/${productId}`);
+                await api.delete(`/Vendor/${id}/products/${productId}`);
                 fetchProducts();
             } catch {
                 alert('فشل في حذف المنتج');
@@ -105,6 +108,46 @@ function VendorDetails() {
         }
     };
 
+    const handleProductImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const res = await api.post('/upload', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            setForm({ ...form, imageUrl: res.data.imageUrl });
+        } catch (err) {
+            alert('فشل في رفع صورة المنتج');
+            console.error(err);
+        }
+    };
+
+    const handleVendorImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const res = await api.post('/upload', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            const newImageUrl = res.data.imageUrl;
+            setVendorImage(newImageUrl);
+
+            // Optional: Update vendor image in backend
+            await api.put(`/Vendor/${id}/update-image`, { imageUrl: newImageUrl });
+        } catch (err) {
+            alert('فشل في رفع صورة البائع');
+            console.error(err);
+        }
+    };
+
     return (
         <div>
             <button className="btn btn-outline-secondary mb-3" onClick={() => navigate('/dashboard/vendors')}>
@@ -119,6 +162,17 @@ function VendorDetails() {
                     <h3>{vendor.name}</h3>
                     <p>الموقع: {vendor.location}</p>
                     <p>الفئة: {vendor.vendorCategory?.name}</p>
+
+                    {vendorImage && (
+                        <div style={{ maxWidth: 300 }}>
+                            <label className="form-label">صورة البائع</label>
+                            <img
+                                src={vendorImage}
+                                alt="Vendor"
+                                style={{ width: 200, marginTop: 10, borderRadius: 8, display: 'block' }}
+                            />
+                        </div>
+                    )}
 
                     <div className="input-group mb-3" style={{ maxWidth: '300px' }}>
                         <input
@@ -167,12 +221,16 @@ function VendorDetails() {
                     />
                 </div>
                 <div className="col-md-3">
-                    <input
-                        className="form-control mb-2"
-                        placeholder="رابط الصورة"
-                        value={form.imageUrl}
-                        onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                    />
+                    <form onSubmit={async (e) => { e.preventDefault(); await handleProductImageUpload({ target: { files: [document.getElementById('product-image-input').files[0]] } }); }} encType="multipart/form-data">
+                        <input
+                            id="product-image-input"
+                            type="file"
+                            accept="image/*"
+                            className="form-control mb-2"
+                            style={{ display: 'block' }}
+                        />
+                        <button type="submit" className="btn btn-secondary mb-2">رفع صورة المنتج</button>
+                    </form>
                 </div>
                 <div className="col-12">
                     <button className="btn btn-success">{editId ? 'تحديث' : 'إضافة'}</button>

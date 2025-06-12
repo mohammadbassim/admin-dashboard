@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'https://gnosis-001-site2.jtempurl.com/api',
+    baseURL: 'http://45.149.207.65:5001/api',
 });
 
 api.interceptors.request.use((config) => {
