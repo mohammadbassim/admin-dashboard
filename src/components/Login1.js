@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/api'; // optional, if you use your api wrapper
+import { jwtDecode } from 'jwt-decode';
 
 function Login() {
 
@@ -19,6 +20,15 @@ function Login() {
             const token = res.data?.token;
             if (token) {
                 localStorage.setItem('token', token);
+                // Decode JWT to check if main admin
+                let role = 'admin';
+                try {
+                    const decoded = jwtDecode(token);
+                    if (decoded && decoded.IsMainAdmin === 'True') {
+                        role = 'main-admin';
+                    }
+                } catch {}
+                localStorage.setItem('role', role);
                 navigate('/dashboard/vendors');
             } else {
                 alert('Login successful but no token received');

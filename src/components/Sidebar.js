@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 function Sidebar() {
     const navigate = useNavigate();
+    const role = localStorage.getItem('role'); // e.g., 'main-admin' for main admins
 
     const handleLogout = () => {
         localStorage.removeItem('token'); // ✅ Remove token
@@ -51,6 +52,14 @@ function Sidebar() {
                         📝 قائمة السائقين
                     </NavLink>
                 </li>
+                {/* Only show order analytics for main admins */}
+                {role === 'main-admin' && (
+                    <li className="nav-item mb-2">
+                        <NavLink to="/dashboard/order-stats" className="nav-link text-dark">
+                            📊 إحصائيات الطلبات
+                        </NavLink>
+                    </li>
+                )}
                 <li className="nav-item mt-3">
                     <button className="btn btn-outline-danger" onClick={handleLogout}>
                         تسجيل الخروج

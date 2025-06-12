@@ -3,13 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/api';
 
 function Register() {
-    const [form, setForm] = useState({ username: '', passwordHash: '' });
+    // Use password (not passwordHash) in form state for clarity
+    const [form, setForm] = useState({ username: '', password: '' });
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await api.post('/Auth/register', form);
+            // Send as PasswordHash to match backend expectation
+            await api.post('/Auth/register', {
+                username: form.username,
+                PasswordHash: form.password
+            });
             alert('تم التسجيل بنجاح');
             navigate('/login');
         } catch (err) {

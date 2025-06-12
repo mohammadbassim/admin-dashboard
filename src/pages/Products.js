@@ -5,7 +5,13 @@ function Products() {
     const [vendors, setVendors] = useState([]);
     const [products, setProducts] = useState([]);
     const [selectedVendor, setSelectedVendor] = useState(null);
-    const [form, setForm] = useState({ name: '', priceInSYP: '', imageUrl: '', price1 });
+    const [form, setForm] = useState({
+        name: '',
+        priceInSYP: '',
+        price1: '',
+        productCategoryId: '',
+        imageFile: null
+    });
     const [editId, setEditId] = useState(null);
 
     useEffect(() => {
@@ -39,14 +45,23 @@ function Products() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const formData = new FormData();
+        formData.append('name', form.name);
+        formData.append('priceInSYP', form.priceInSYP);
+        formData.append('costPrice', form.price1);
+        formData.append('productCategoryId', form.productCategoryId);
+        if (form.imageFile) formData.append('image', form.imageFile);
         try {
-            const productData = { ...form, priceInSYP: parseFloat(form.priceInSYP) };
             if (editId) {
-                await api.put(`/Vendor/${selectedVendor}/products/${editId}`, productData);
+                await api.put(`/vendors/${selectedVendor}/products/${editId}/with-image`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
             } else {
-                await api.post(`/Vendor/${selectedVendor}/products`, productData);
+                await api.post(`/vendors/${selectedVendor}/products/with-image`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
             }
-            setForm({ name: '', priceInSYP: '', imageUrl: '' });
+            setForm({ name: '', priceInSYP: '', price1: '', productCategoryId: '', imageFile: null });
             setEditId(null);
             fetchProducts(selectedVendor);
         } catch {
@@ -55,7 +70,7 @@ function Products() {
     };
 
     const handleEdit = (p) => {
-        setForm({ name: p.name, priceInSYP: p.priceInSYP, imageUrl: p.imageUrl });
+        setForm({ name: p.name, priceInSYP: p.priceInSYP, price1: p.costPrice, productCategoryId: p.productCategoryId });
         setEditId(p.id);
     };
 
@@ -67,23 +82,6 @@ function Products() {
             } catch {
                 alert('فشل في الحذف');
             }
-        }
-    };
-
-    // Add image upload handler
-    const handleProductImageUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const formData = new FormData();
-        formData.append('image', file);
-        try {
-            const res = await api.post('/upload', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            setForm({ ...form, imageUrl: res.data.imageUrl });
-        } catch (err) {
-            alert('فشل في رفع صورة المنتج');
-            console.error(err);
         }
     };
 
@@ -115,9 +113,13 @@ function Products() {
                                     value={form.priceInSYP} onChange={(e) => setForm({ ...form, priceInSYP: e.target.value })} />
                             </div>
                             <div className="col-md-4">
-                                <input className="form-control mb-2" placeholder="رابط الصورة"
-                                    value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} />
-                                <input className="form-control mb-2" type="file" accept="image/*" onChange={handleProductImageUpload} />
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="form-control mb-2"
+                                    onChange={e => setForm({ ...form, imageFile: e.target.files[0] })}
+                                    required={!editId} // require image only when adding
+                                />
                             </div>
                         </div>
                         <button className="btn btn-primary">{editId ? 'تعديل' : 'إضافة'}</button>
@@ -137,7 +139,7 @@ function Products() {
                                 <tr key={p.id}>
                                     <td>{p.name}</td>
                                     <td>{p.priceInSYP}</td>
-                                    <td><img src={p.imageUrl} alt={p.name} style={{ width: 50 }} /></td>
+                                    <td><img src={p.imageUrl ? `http://192.168.1.29:5010${p.imageUrl}` : ''} alt={p.name} style={{ width: 50 }} /></td>
                                     <td>
                                         <button className="btn btn-sm btn-warning me-2" onClick={() => handleEdit(p)}>تعديل</button>
                                         <button className="btn btn-sm btn-danger" onClick={() => handleDelete(p.id)}>حذف</button>

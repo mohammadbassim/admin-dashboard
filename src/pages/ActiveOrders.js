@@ -21,6 +21,8 @@ function ActiveOrders() {
         }
     };
 
+    const userOrders = orders.filter(order => order.user);
+
     return (
         <div>
             <h4 className="mb-3">الطلبات النشطة</h4>
@@ -40,29 +42,33 @@ function ActiveOrders() {
                         </tr>
                     </thead>
                     <tbody>
-                        {orders.map(order => (
-                            <tr key={order.id}>
-                                <td>{order.id}</td>
-                                <td>{order.status}</td>
-                                <td>{order.user ? `${order.user.firstName || ''} ${order.user.lastName || ''}` : '—'}</td>
-                                <td>{order.vendor ? order.vendor.name : '—'}</td>
-                                <td>{order.driver ? order.driver.name : '—'}</td>
-                                <td>{order.driver ? order.driver.phone : '—'}</td>
-                                <td>{new Date(order.createdAt).toLocaleString()}</td>
-                                <td>{order.paymentMethod}</td>
-                                <td>
-                                    {order.orderDetails && order.orderDetails.length > 0 ? (
-                                        <ul style={{ paddingLeft: 18 }}>
-                                            {order.orderDetails.map((item, idx) => (
-                                                <li key={idx}>
-                                                    {item.productName || '-'} - الكمية: {item.quantity ?? '-'} - السعر: {item.price ?? '-'}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    ) : '—'}
-                                </td>
-                            </tr>
-                        ))}
+                        {userOrders.length === 0 ? (
+                            <tr><td colSpan="9">لا توجد طلبات نشطة من المستخدمين</td></tr>
+                        ) : (
+                            userOrders.map(order => (
+                                <tr key={order.id}>
+                                    <td>{order.id}</td>
+                                    <td><span className={`badge bg-${order.status === 'Delivered' ? 'success' : order.status === 'Pending' ? 'warning' : 'info'}`}>{order.status}</span></td>
+                                    <td>{order.user ? `${order.user.firstName || ''} ${order.user.lastName || ''}` : '—'}</td>
+                                    <td>{order.vendor ? order.vendor.name : '—'}</td>
+                                    <td>{order.driver ? order.driver.name : '—'}</td>
+                                    <td>{order.driver ? order.driver.phone : '—'}</td>
+                                    <td>{new Date(order.createdAt).toLocaleString()}</td>
+                                    <td>{order.paymentMethod}</td>
+                                    <td>
+                                        {order.orderDetails && order.orderDetails.length > 0 ? (
+                                            <ul style={{ paddingLeft: 18 }}>
+                                                {order.orderDetails.map((item, idx) => (
+                                                    <li key={idx}>
+                                                        {item.productName || '-'} - الكمية: {item.quantity ?? '-'} - السعر: {item.price ?? '-'}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        ) : '—'}
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             )}

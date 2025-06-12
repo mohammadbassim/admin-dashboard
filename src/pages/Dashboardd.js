@@ -9,6 +9,7 @@ import PendingAdmins from './PendingAdmins';
 import ActiveOrders from './ActiveOrders';
 import RegisterDriver from './RegisterDriver';
 import DriversList from './DriversList';
+import OrderStats from './OrderStats';
 
 function Dashboard() {
     return (
@@ -24,6 +25,7 @@ function Dashboard() {
                     <Route path="active-orders" element={<ActiveOrders />} />
                     <Route path="register-driver" element={<RegisterDriver />} />
                     <Route path="drivers-list" element={<DriversList />} />
+                    <Route path="order-stats" element={<OrderStats />} />
                 </Routes>
             </div>
         </div>

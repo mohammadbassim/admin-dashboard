@@ -8,13 +8,17 @@ function VendorDetails() {
     const [vendor, setVendor] = useState(null);
     const [vendorImage, setVendorImage] = useState(''); // used in JSX, keep as is
     const [products, setProducts] = useState([]);
-    const [form, setForm] = useState({ name: '', priceInSYP: '', costPrice: '', imageUrl: '' });
+    const [form, setForm] = useState({ name: '', priceInSYP: '', costPrice: '', imageFile: null });
     const [editId, setEditId] = useState(null);
     const [percentageChange, setPercentageChange] = useState('');
+    const [editVendorForm, setEditVendorForm] = useState({ name: '', location: '', dollarExchangeRate: '', vendorCategoryId: '', imageFile: null });
+    const [categories, setCategories] = useState([]);
+    const [showEditVendor, setShowEditVendor] = useState(false);
 
     useEffect(() => {
         fetchVendor();
         fetchProducts();
+        fetchCategories();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
@@ -29,24 +33,41 @@ function VendorDetails() {
         setProducts(res.data || []);
     };
 
+    const fetchCategories = async () => {
+        try {
+            const res = await api.get('/VendorCategory');
+            setCategories(res.data);
+        } catch {
+            setCategories([]);
+        }
+    };
+
+    // --- Product Form ---
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const payload = {
-            name: form.name,
-            priceInSYP: parseFloat(form.priceInSYP),
-            costPrice: parseFloat(form.costPrice),
-            imageUrl: form.imageUrl
-        };
-
+        const formData = new FormData();
+        formData.append('name', form.name);
+        formData.append('priceInSYP', form.priceInSYP);
+        formData.append('costPrice', form.costPrice);
+        // Only append image if a new file is selected
+        if (form.imageFile) formData.append('image', form.imageFile);
         try {
             if (editId) {
-                await api.put(`/Vendor/${id}/products/${editId}`, payload);
+                await api.put(`/vendors/${id}/products/${editId}/with-image`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
             } else {
-                await api.post(`/Vendor/${id}/products`, payload);
+                await api.post(`/vendors/${id}/products/with-image`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
             }
-            setForm({ name: '', priceInSYP: '', costPrice: '', imageUrl: '' });
+            setForm({ name: '', priceInSYP: '', costPrice: '', imageFile: null });
             setEditId(null);
             fetchProducts();
+            // Reset file input manually
+            if (document.getElementById('product-image-input')) {
+                document.getElementById('product-image-input').value = '';
+            }
         } catch {
             alert('فشل في حفظ المنتج');
         }
@@ -57,9 +78,12 @@ function VendorDetails() {
             name: product.name,
             priceInSYP: product.priceInSYP,
             costPrice: product.costPrice,
-            imageUrl: product.imageUrl
+            imageFile: null // User must re-select image if changing
         });
         setEditId(product.id);
+        // Reset file input value
+        const fileInput = document.getElementById('product-image-input');
+        if (fileInput) fileInput.value = '';
     };
 
     const handleDeleteVendor = async () => {
@@ -84,7 +108,7 @@ function VendorDetails() {
     const handleDeleteProduct = async (productId) => {
         if (window.confirm('هل تريد حذف هذا المنتج؟')) {
             try {
-                await api.delete(`/Vendor/${id}/products/${productId}`);
+                await api.delete(`/vendors/${id}/products/${productId}`); // fixed endpoint
                 fetchProducts();
             } catch {
                 alert('فشل في حذف المنتج');
@@ -108,43 +132,44 @@ function VendorDetails() {
         }
     };
 
-    const handleProductImageUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const formData = new FormData();
-        formData.append('image', file);
-
-        try {
-            const res = await api.post('/upload', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+    const openEditVendor = () => {
+        if (vendor) {
+            setEditVendorForm({
+                name: vendor.name || '',
+                location: vendor.location || '',
+                dollarExchangeRate: vendor.dollarExchangeRate || '',
+                vendorCategoryId: vendor.vendorCategoryId || '',
+                imageFile: null
             });
-            setForm({ ...form, imageUrl: res.data.imageUrl });
-        } catch (err) {
-            alert('فشل في رفع صورة المنتج');
-            console.error(err);
+            setShowEditVendor(true);
         }
     };
 
-    const handleVendorImageUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+    const handleEditVendorChange = (e) => {
+        const { name, value, files } = e.target;
+        if (name === 'imageFile') {
+            setEditVendorForm(f => ({ ...f, imageFile: files[0] }));
+        } else {
+            setEditVendorForm(f => ({ ...f, [name]: value }));
+        }
+    };
 
+    const handleEditVendorSubmit = async (e) => {
+        e.preventDefault();
         const formData = new FormData();
-        formData.append('image', file);
-
+        formData.append('name', editVendorForm.name);
+        formData.append('location', editVendorForm.location);
+        formData.append('dollarExchangeRate', editVendorForm.dollarExchangeRate);
+        formData.append('vendorCategoryId', editVendorForm.vendorCategoryId);
+        if (editVendorForm.imageFile) formData.append('image', editVendorForm.imageFile);
         try {
-            const res = await api.post('/upload', formData, {
+            await api.put(`/Vendor/${id}/with-image`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            const newImageUrl = res.data.imageUrl;
-            setVendorImage(newImageUrl);
-
-            // Optional: Update vendor image in backend
-            await api.put(`/Vendor/${id}/update-image`, { imageUrl: newImageUrl });
-        } catch (err) {
-            alert('فشل في رفع صورة البائع');
-            console.error(err);
+            setShowEditVendor(false);
+            fetchVendor();
+        } catch {
+            alert('فشل في تعديل بيانات البائع');
         }
     };
 
@@ -157,19 +182,91 @@ function VendorDetails() {
                 🗑️ حذف
             </button>
 
+            {/* Edit Vendor Modal or Section */}
+            {showEditVendor && (
+                <form className="mb-4 p-3 border rounded" onSubmit={handleEditVendorSubmit} style={{ background: '#f9f9f9' }}>
+                    <h5 className="mb-3">تعديل بيانات البائع</h5>
+                    <div className="row">
+                        <div className="col-md-3">
+                            <input
+                                className="form-control mb-2"
+                                name="name"
+                                placeholder="اسم البائع"
+                                value={editVendorForm.name}
+                                onChange={handleEditVendorChange}
+                                required
+                            />
+                        </div>
+                        <div className="col-md-3">
+                            <input
+                                className="form-control mb-2"
+                                name="location"
+                                placeholder="الموقع"
+                                value={editVendorForm.location}
+                                onChange={handleEditVendorChange}
+                                required
+                            />
+                        </div>
+                        <div className="col-md-3">
+                            <input
+                                type="number"
+                                className="form-control mb-2"
+                                name="dollarExchangeRate"
+                                placeholder="سعر صرف الدولار"
+                                value={editVendorForm.dollarExchangeRate}
+                                onChange={handleEditVendorChange}
+                                required
+                            />
+                        </div>
+                        <div className="col-md-3">
+                            <select
+                                className="form-control mb-2"
+                                name="vendorCategoryId"
+                                value={editVendorForm.vendorCategoryId}
+                                onChange={handleEditVendorChange}
+                                required
+                            >
+                                <option value="">اختر الفئة</option>
+                                {categories.map(c => (
+                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="col-md-3">
+                            <input
+                                type="file"
+                                accept="image/*"
+                                className="form-control mb-2"
+                                name="imageFile"
+                                onChange={handleEditVendorChange}
+                            />
+                            {/* Show current image if exists */}
+                            {vendor && vendor.imageUrl && (
+                                <img
+                                    src={`http://192.168.1.29:5010${vendor.imageUrl}`}
+                                    alt="Vendor"
+                                    style={{ width: 80, marginTop: 5, borderRadius: 6 }}
+                                />
+                            )}
+                        </div>
+                    </div>
+                    <button className="btn btn-success me-2" type="submit">حفظ التعديلات</button>
+                    <button className="btn btn-secondary" type="button" onClick={() => setShowEditVendor(false)}>إلغاء</button>
+                </form>
+            )}
+
             {vendor && (
                 <div className="mb-4">
                     <h3>{vendor.name}</h3>
                     <p>الموقع: {vendor.location}</p>
                     <p>الفئة: {vendor.vendorCategory?.name}</p>
-
-                    {vendorImage && (
+                    {vendor.imageUrl && (
                         <div style={{ maxWidth: 300 }}>
                             <label className="form-label">صورة البائع</label>
                             <img
-                                src={vendorImage}
+                                src={`http://192.168.1.29:5010${vendor.imageUrl}`}
                                 alt="Vendor"
-                                style={{ width: 200, marginTop: 10, borderRadius: 8, display: 'block' }}
+                                style={{ width: 200, marginTop: 10,marginBottom:15, borderRadius: 8, display: 'block' }}
                             />
                         </div>
                     )}
@@ -186,6 +283,9 @@ function VendorDetails() {
                             تحديث الأسعار
                         </button>
                     </div>
+
+                    {/* Add an edit button near vendor info */}
+                    <button className="btn btn-primary btn-sm mb-2" onClick={openEditVendor}>تعديل بيانات البائع</button>
                 </div>
             )}
 
@@ -221,16 +321,14 @@ function VendorDetails() {
                     />
                 </div>
                 <div className="col-md-3">
-                    <form onSubmit={async (e) => { e.preventDefault(); await handleProductImageUpload({ target: { files: [document.getElementById('product-image-input').files[0]] } }); }} encType="multipart/form-data">
-                        <input
-                            id="product-image-input"
-                            type="file"
-                            accept="image/*"
-                            className="form-control mb-2"
-                            style={{ display: 'block' }}
-                        />
-                        <button type="submit" className="btn btn-secondary mb-2">رفع صورة المنتج</button>
-                    </form>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        className="form-control mb-2"
+                        id="product-image-input"
+                        onChange={e => setForm({ ...form, imageFile: e.target.files[0] })}
+                        required={!editId}
+                    />
                 </div>
                 <div className="col-12">
                     <button className="btn btn-success">{editId ? 'تحديث' : 'إضافة'}</button>
@@ -261,14 +359,14 @@ function VendorDetails() {
                                 <td>{p.priceInSYP.toFixed(0)}</td>
                                 <td>{p.costPrice?.toFixed(0) || '—'}</td>
                                 <td>
-                                    {vendor.dollarExchangeRate > 0
+                                    {vendor && vendor.dollarExchangeRate > 0
                                         ? (p.priceInSYP / vendor.dollarExchangeRate).toFixed(2)
                                         : '—'}
                                 </td>
                                 <td>
                                     {p.imageUrl && (
                                         <img
-                                            src={p.imageUrl}
+                                            src={`http://192.168.1.29:5010${p.imageUrl}`}
                                             alt={p.name}
                                             style={{ width: 60, height: 'auto', borderRadius: 4 }}
                                         />

@@ -14,8 +14,8 @@ function Vendors() {
         password: '',
         location: '',
         dollarExchangeRate: '',
-        imageUrl: '',
-        vendorCategoryId: ''
+        vendorCategoryId: '',
+        imageFile: null
     });
     const navigate = useNavigate();
     const [selectedId, setSelectedId] = useState(null);
@@ -73,30 +73,25 @@ function Vendors() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const formData = new FormData();
+        formData.append('name', form.name);
+        formData.append('phoneNumber', form.phoneNumber);
+        formData.append('password', form.password);
+        formData.append('location', form.location);
+        formData.append('dollarExchangeRate', form.dollarExchangeRate);
+        formData.append('vendorCategoryId', form.vendorCategoryId);
+        if (form.imageFile) formData.append('image', form.imageFile);
         try {
-            const data = {
-                name: form.name,
-                phoneNumber: form.phoneNumber,
-                password: form.password,
-                location: form.location,
-                dollarExchangeRate: parseFloat(form.dollarExchangeRate),
-                imageUrl: form.imageUrl,
-                vendorCategoryId: parseInt(form.vendorCategoryId)
-            };
-            if (!data.vendorCategoryId || isNaN(data.vendorCategoryId)) {
-                alert('يرجى اختيار فئة البائع');
-                return;
-            }
-            if (!data.phoneNumber || !data.password) {
-                alert('يرجى إدخال رقم الجوال وكلمة المرور');
-                return;
-            }
             if (selectedId) {
-                await api.put(`/Vendor/${selectedId}`, data);
+                await api.put(`/Vendor/${selectedId}/with-image`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
             } else {
-                await api.post('/Vendor/register', data);
+                await api.post('/Vendor/with-image', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
             }
-            setForm({ name: '', phoneNumber: '', password: '', location: '', dollarExchangeRate: '', imageUrl: '', vendorCategoryId: '' });
+            setForm({ name: '', phoneNumber: '', password: '', location: '', dollarExchangeRate: '', vendorCategoryId: '', imageFile: null });
             setSelectedId(null);
             fetchVendors();
         } catch (error) {
@@ -181,40 +176,12 @@ function Vendors() {
 
                     <div className="col-md-8">
                         <label>صورة البائع</label>
-                        <form onSubmit={async (e) => {
-                            e.preventDefault();
-                            const fileInput = document.getElementById('vendor-image-upload');
-                            if (fileInput && fileInput.files.length > 0) {
-                                const file = fileInput.files[0];
-                                const formData = new FormData();
-                                formData.append('image', file);
-                                try {
-                                    const res = await api.post('/upload', formData, {
-                                        headers: { 'Content-Type': 'multipart/form-data' }
-                                    });
-                                    setForm({ ...form, imageUrl: res.data.imageUrl });
-                                } catch (err) {
-                                    alert('فشل في رفع صورة البائع');
-                                }
-                            } else {
-                                alert('يرجى اختيار صورة قبل الرفع');
-                            }
-                        }} encType="multipart/form-data" style={{ display: 'flex', flexDirection: 'column' }}>
-                            <input
-                                id="vendor-image-upload"
-                                type="file"
-                                accept="image/*"
-                                className="form-control mb-2"
-                            />
-                            <button type="submit" className="btn btn-primary mb-2">رفع الصورة</button>
-                        </form>
-                        {form.imageUrl && (
-                            <img
-                                src={form.imageUrl}
-                                alt="Vendor Preview"
-                                style={{ width: '100%', height: 80, objectFit: 'cover', borderRadius: '0.5rem' }}
-                            />
-                        )}
+                        <input
+                            type="file"
+                            accept="image/*"
+                            className="form-control mb-2"
+                            onChange={e => setForm({ ...form, imageFile: e.target.files[0] })}
+                        />
                     </div>
 
                     <div className="col-md-6">
@@ -253,13 +220,14 @@ function Vendors() {
                         <th>اسم البائع</th>
                         <th>الموقع</th>
                         <th>الفئة</th>
+                        <th>صورة البائع</th>
                         <th>إجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
                     {vendors.length === 0 ? (
                         <tr>
-                            <td colSpan="4" className="text-center">
+                            <td colSpan="5" className="text-center">
                                 <div className="alert alert-warning mb-0">لا يوجد بائعين لعرضهم.</div>
                             </td>
                         </tr>
@@ -269,6 +237,7 @@ function Vendors() {
                                 <td>{v.name}</td>
                                 <td>{v.location}</td>
                                 <td>{v.vendorCategory?.name || 'غير محددة'}</td>
+                                <td>{v.imageUrl && <img src={`http://192.168.1.29:5010${v.imageUrl}`} alt={v.name} style={{ width: 50 }} />}</td>
                                 <td>
                                     <button
                                         className="btn btn-outline-primary btn-sm me-2"
