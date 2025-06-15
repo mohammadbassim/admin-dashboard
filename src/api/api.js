@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://45.149.207.65:5000/api',
+    baseURL: '/api', // ✅ This uses Nginx reverse proxy
 });
 
 api.interceptors.request.use((config) => {
