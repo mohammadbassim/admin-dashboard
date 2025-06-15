@@ -111,6 +111,13 @@ function Vendors() {
         setSelectedId(v.id);
     };
 
+    // Helper to get full image URL
+    const getImageUrl = (url) => {
+        if (!url) return '';
+        if (url.startsWith('http://') || url.startsWith('https://')) return url;
+        return 'http://45.149.207.65:5000' + url;
+    };
+
 
     return (
         <div>
@@ -237,7 +244,7 @@ function Vendors() {
                                 <td>{v.name}</td>
                                 <td>{v.location}</td>
                                 <td>{v.vendorCategory?.name || 'غير محددة'}</td>
-                                <td>{v.imageUrl && <img src={`http://192.168.1.29:5010${v.imageUrl}`} alt={v.name} style={{ width: 50 }} />}</td>
+                                <td>{v.imageUrl && <img src={getImageUrl(v.imageUrl)} alt={v.name} style={{ width: 50 }} />}</td>
                                 <td>
                                     <button
                                         className="btn btn-outline-primary btn-sm me-2"
